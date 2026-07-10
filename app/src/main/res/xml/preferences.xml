@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <PreferenceCategory android:title="General">
+
+        <ListPreference
+            android:key="gpu_backend"
+            android:title="GPU Backend"
+            android:summary="Rendering API used by the emulator"
+            android:entries="@array/gpu_backend_entries"
+            android:entryValues="@array/gpu_backend_values"
+            android:defaultValue="vulkan"
+            app:useSimpleSummaryProvider="true" />
+
+        <SwitchPreferenceCompat
+            android:key="fullscreen"
+            android:title="Fullscreen during emulation"
+            android:defaultValue="true" />
+
+        <SwitchPreferenceCompat
+            android:key="keep_screen_on"
+            android:title="Keep screen on"
+            android:defaultValue="true" />
+
+    </PreferenceCategory>
+
+    <PreferenceCategory android:title="Audio">
+
+        <SwitchPreferenceCompat
+            android:key="audio_enabled"
+            android:title="Enable audio"
+            android:defaultValue="true" />
+
+    </PreferenceCategory>
+
+    <PreferenceCategory android:title="Advanced">
+
+        <EditTextPreference
+            android:key="extra_cvars"
+            android:title="Extra cvars"
+            android:summary="Command-line config variables passed to Xenia (space-separated key=value)"
+            android:dialogTitle="Extra cvars" />
+
+        <SwitchPreferenceCompat
+            android:key="gpu_trace_enable"
+            android:title="Enable GPU trace capture"
+            android:summary="Captures Vulkan traces for debugging. Impacts performance."
+            android:defaultValue="false" />
+
+    </PreferenceCategory>
+
+</PreferenceScreen>

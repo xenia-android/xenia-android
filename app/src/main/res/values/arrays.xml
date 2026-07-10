@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="gpu_backend_entries">
+        <item>Vulkan</item>
+        <item>Null (no rendering)</item>
+    </string-array>
+    <string-array name="gpu_backend_values">
+        <item>vulkan</item>
+        <item>null</item>
+    </string-array>
+</resources>

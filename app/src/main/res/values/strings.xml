@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Xenia</string>
+
+    <!-- Activity labels -->
+    <string name="activity_label_gpu_trace_viewer">GPU Trace Viewer</string>
+    <string name="settings">Settings</string>
+
+    <!-- Main screen -->
+    <string name="empty_library_hint">No games found.\nTap the folder icon to set your game library, or use Open File to launch a game directly.</string>
+    <string name="action_open_file">Open File…</string>
+    <string name="action_set_library_folder">Set Library Folder…</string>
+    <string name="action_gpu_trace_viewer">GPU Trace Viewer…</string>
+    <string name="action_settings">Settings</string>
+
+    <!-- Dialogs -->
+    <string name="dialog_exit_title">Stop Emulation?</string>
+    <string name="dialog_exit_message">Unsaved game progress will be lost.</string>
+    <string name="dialog_exit_confirm">Stop</string>
+
+    <!-- Errors -->
+    <string name="error_cannot_open_file">Cannot open selected file.</string>
+    <string name="error_vulkan_not_supported">This device does not support Vulkan 1.0, which is required by Xenia.</string>
+</resources>

@@ -1,0 +1,34 @@
+# Gradle / Android build outputs
+.gradle/
+build/
+local.properties
+*.apk
+*.aab
+*.ap_
+*.dex
+
+# Android Studio project files
+.idea/
+*.iml
+.DS_Store
+captures/
+.externalNativeBuild/
+.cxx/
+
+# NDK / CMake generated files
+app/.cxx/
+app/src/main/cpp/.externalNativeBuild/
+
+# Keys / signing
+*.jks
+*.keystore
+keystore.properties
+
+# OS metadata
+Thumbs.db
+.DS_Store
+
+# Xenia upstream (vendor separately)
+xenia-upstream/
+src/xenia/
+third_party/
