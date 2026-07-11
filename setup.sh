@@ -16,11 +16,22 @@ if [[ ! -d "${UPSTREAM}/src" ]]; then
     "${UPSTREAM}"
 fi
 
+echo "Initializing submodules inside xenia-upstream..."
+git -C "${UPSTREAM}" submodule update --init --recursive --depth 1
+
 for target in src third_party; do
   link="${REPO}/${target}"
-  src="${UPSTREAM}/${target}"
+  src="xenia-upstream/${target}"
   if [[ -L "${link}" ]]; then
-    echo "  already linked: ${target}"
+    # If the symlink is absolute, recreate it as relative
+    current_target=$(readlink "${link}")
+    if [[ "${current_target}" == /* ]]; then
+      rm "${link}"
+      ln -s "${src}" "${link}"
+      echo "  re-linked as relative: ${target}"
+    else
+      echo "  already linked: ${target}"
+    fi
   elif [[ -e "${link}" ]]; then
     echo "  WARNING: ${link} exists as real path, skipping"
   else
