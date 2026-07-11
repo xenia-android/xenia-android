@@ -1,0 +1,7 @@
+# xenia-upstream is cloned directly by CI and setup.sh.
+# For a proper git submodule setup run:
+#   git submodule add -b master https://github.com/xenia-project/xenia.git xenia-upstream
+[submodule "xenia-upstream"]
+	path = xenia-upstream
+	url = https://github.com/xenia-project/xenia.git
+	branch = master
