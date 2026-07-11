@@ -1,5 +1,0 @@
-[submodule "xenia-upstream"]
-	path = xenia-upstream
-	url = https://github.com/xenia-project/xenia.git
-	branch = master
-	shallow = false
