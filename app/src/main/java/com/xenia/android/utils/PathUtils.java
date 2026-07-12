@@ -107,13 +107,10 @@ public final class PathUtils {
             android.os.ParcelFileDescriptor pfd =
                     context.getContentResolver().openFileDescriptor(uri, "r");
             if (pfd == null) return null;
-            // /proc/self/fd/<N> is a symlink to the real file — readable by
-            // native open() as long as the ParcelFileDescriptor stays open.
-            // The native side must dup() the fd immediately.
-            final int fd = pfd.getFd();
+            // Detach the file descriptor so that garbage collection won't close it
+            // before the native thread can access the symlink at /proc/self/fd/<N>.
+            final int fd = pfd.detachFd();
             return "/proc/self/fd/" + fd;
-            // Note: caller is responsible for keeping pfd alive or the fd
-            // will be closed. For simplicity this is acceptable at launch time.
         } catch (final Exception ignored) {}
         return null;
     }

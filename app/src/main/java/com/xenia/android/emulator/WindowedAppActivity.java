@@ -31,7 +31,7 @@ public abstract class WindowedAppActivity extends Activity {
      * arguments. The literal value is also referenced from native code.
      */
     public static final String EXTRA_CVARS =
-            "com.xenia.android.emulator.WindowedAppActivity.EXTRA_CVARS";
+            "jp.xenia.emulator.WindowedAppActivity.EXTRA_CVARS";
 
     static {
         System.loadLibrary("xenia-android");
@@ -241,5 +241,19 @@ public abstract class WindowedAppActivity extends Activity {
         public void surfaceRedrawNeeded(final SurfaceHolder holder) {
             onWindowSurfaceDraw(true);
         }
+    }
+
+    /**
+     * Called from native code when a fatal error occurs.
+     * Shows a Toast and finishes the activity gracefully.
+     */
+    @SuppressWarnings("UnusedDeclaration")
+    public void handleFatalError(final String message) {
+        runOnUiThread(() -> {
+            android.widget.Toast.makeText(WindowedAppActivity.this,
+                    "Fatal Error: " + message,
+                    android.widget.Toast.LENGTH_LONG).show();
+            finish();
+        });
     }
 }
