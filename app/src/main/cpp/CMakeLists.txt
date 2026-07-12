@@ -32,14 +32,22 @@ add_compile_options(
 add_link_options(-Wl,--gc-sections)
 
 # ---------------------------------------------------------------------------
-# Global definitions
+# Global definitions & architecture detection
 # ---------------------------------------------------------------------------
+if(ANDROID_ABI STREQUAL "x86_64")
+  set(XE_ARCH_AMD64_VAL 1)
+  set(XE_ARCH_ARM64_VAL 0)
+else()
+  set(XE_ARCH_AMD64_VAL 0)
+  set(XE_ARCH_ARM64_VAL 1)
+endif()
+
 add_compile_definitions(
   # Platform
   XE_PLATFORM_ANDROID=1
   XE_PLATFORM_LINUX=1        # Android inherits POSIX layer
-  XE_ARCH_AMD64=0
-  XE_ARCH_ARM64=1
+  XE_ARCH_AMD64=${XE_ARCH_AMD64_VAL}
+  XE_ARCH_ARM64=${XE_ARCH_ARM64_VAL}
 
   # Feature gates
   XE_VULKAN_ENABLED=1
@@ -103,7 +111,10 @@ include_directories(
   "${XE_3P}/rapidjson/include"
   "${XE_3P}/utfcpp/source"
   "${XE_3P}/date/include"
+  "${XE_3P}/llvm/include"
+  "${XE_3P}/FFmpeg"
   "${CMAKE_CURRENT_SOURCE_DIR}/jni"
+  "${CMAKE_CURRENT_SOURCE_DIR}/custom_include"
 )
 
 # ---------------------------------------------------------------------------
@@ -123,11 +134,13 @@ endmacro()
 # ---------------------------------------------------------------------------
 file(GLOB XE_BASE_SRCS "${XE_SRC}/xenia/base/*.cc")
 list(FILTER XE_BASE_SRCS EXCLUDE REGEX "_(win|mac|gtk|linux|gnulinux)\\.cc$")
-list(FILTER XE_BASE_SRCS EXCLUDE REGEX "test|_demo|debugging_mac")
+list(FILTER XE_BASE_SRCS EXCLUDE REGEX "test|_demo|debugging_mac|console_app_main")
+if(NOT XE_ARCH_AMD64_VAL)
+  list(FILTER XE_BASE_SRCS EXCLUDE REGEX "_x64\\.cc$")
+endif()
 # Add POSIX + Android platform files explicitly
 set(XE_BASE_PLATFORM_SRCS
   ${XE_SRC}/xenia/base/clock_posix.cc
-  ${XE_SRC}/xenia/base/console_app_main_android.cc
   ${XE_SRC}/xenia/base/console_posix.cc
   ${XE_SRC}/xenia/base/cvar_android.cc
   ${XE_SRC}/xenia/base/debugging_posix.cc
@@ -149,9 +162,7 @@ endforeach()
 
 # ---------------------------------------------------------------------------
 # xenia/cpu — PowerPC JIT (processor, HIR, compiler, PPC frontend)
-# The x64 backend is included — ARM64 devices run it via the AArch64 x86emu
-# or via the interpreter fallback; the Xenia CPU module compiles fine on
-# ARM64 because Xbyak/capstone are header-only / cross-platform.
+# Compile architecture-dependent backend files selectively.
 # ---------------------------------------------------------------------------
 file(GLOB XE_CPU_SRCS
   "${XE_SRC}/xenia/cpu/*.cc"
@@ -164,20 +175,24 @@ file(GLOB XE_CPU_SRCS
 list(FILTER XE_CPU_SRCS EXCLUDE REGEX "test|_win\\.cc$|stack_walker_win")
 # Add posix-specific CPU files
 list(APPEND XE_CPU_SRCS
-  ${XE_SRC}/xenia/cpu/backend/x64/x64_code_cache_posix.cc
   ${XE_SRC}/xenia/cpu/stack_walker_posix.cc
 )
-file(GLOB XE_CPU_X64_SRCS "${XE_SRC}/xenia/cpu/backend/x64/*.cc")
-list(FILTER XE_CPU_X64_SRCS EXCLUDE REGEX "_win\\.cc$|test")
-list(APPEND XE_CPU_SRCS ${XE_CPU_X64_SRCS})
+if(XE_ARCH_AMD64_VAL)
+  list(APPEND XE_CPU_SRCS
+    ${XE_SRC}/xenia/cpu/backend/x64/x64_code_cache_posix.cc
+  )
+  file(GLOB XE_CPU_X64_SRCS "${XE_SRC}/xenia/cpu/backend/x64/*.cc")
+  list(FILTER XE_CPU_X64_SRCS EXCLUDE REGEX "_win\\.cc$|test")
+  list(APPEND XE_CPU_SRCS ${XE_CPU_X64_SRCS})
+endif()
 list(REMOVE_DUPLICATES XE_CPU_SRCS)
 
 # ---------------------------------------------------------------------------
 # xenia/gpu — Xenos GPU emulation + Vulkan backend + null backend
-# Excludes D3D12, Windows-only DXBC translator.
+# Excludes D3D12, Windows-only DXBC translator, trace dumping, trace playing.
 # ---------------------------------------------------------------------------
 file(GLOB XE_GPU_SRCS "${XE_SRC}/xenia/gpu/*.cc")
-list(FILTER XE_GPU_SRCS EXCLUDE REGEX "dxbc_shader_translator|shader_compiler_main|_win\\.cc$|test")
+list(FILTER XE_GPU_SRCS EXCLUDE REGEX "dxbc_shader_translator|shader_compiler_main|trace_dump|trace_player|_win\\.cc$|test")
 
 file(GLOB XE_GPU_VULKAN_SRCS "${XE_SRC}/xenia/gpu/vulkan/*.cc")
 list(FILTER XE_GPU_VULKAN_SRCS EXCLUDE REGEX "trace_dump_main|trace_viewer_main|test")
@@ -234,7 +249,7 @@ file(GLOB XE_UI_VULKAN_SRCS
   "${XE_SRC}/xenia/ui/vulkan/*.cc"
   "${XE_SRC}/xenia/ui/vulkan/functions/*.cc"
 )
-list(FILTER XE_UI_VULKAN_SRCS EXCLUDE REGEX "_win\\.cc$|test")
+list(FILTER XE_UI_VULKAN_SRCS EXCLUDE REGEX "_win\\.cc$|test|_demo")
 list(REMOVE_DUPLICATES XE_UI_VULKAN_SRCS)
 
 # ---------------------------------------------------------------------------
@@ -275,11 +290,12 @@ endforeach()
 # Third-party: aes_128 (kernel crypto)
 # ---------------------------------------------------------------------------
 file(GLOB XE_AES_SRCS "${XE_3P}/aes_128/*.cc" "${XE_3P}/aes_128/*.c")
+list(FILTER XE_AES_SRCS EXCLUDE REGEX "main\\.c$")
 
 # ---------------------------------------------------------------------------
 # Third-party: mspack (XEX lzx decompression)
 # ---------------------------------------------------------------------------
-file(GLOB XE_MSPACK_SRCS "${XE_3P}/mspack/*.c")
+file(GLOB XE_MSPACK_SRCS "${XE_3P}/mspack/*.c" "${XE_3P}/mspack/*.cc")
 list(FILTER XE_MSPACK_SRCS EXCLUDE REGEX "test")
 
 # ---------------------------------------------------------------------------
@@ -291,6 +307,7 @@ file(GLOB XE_DXBC_SRCS "${XE_3P}/dxbc/*.cc" "${XE_3P}/dxbc/*.c")
 # Third-party: xxhash (fast hashing, texture cache)
 # ---------------------------------------------------------------------------
 file(GLOB XE_XXHASH_SRCS "${XE_3P}/xxhash/*.cc" "${XE_3P}/xxhash/*.c")
+list(FILTER XE_XXHASH_SRCS EXCLUDE REGEX "xxh_x86dispatch\\.c$|xxhsum\\.c$")
 if(NOT XE_XXHASH_SRCS)
   # xxhash is often header-only — create an empty compilation unit
   file(WRITE "${CMAKE_BINARY_DIR}/xxhash_impl.cc"
@@ -352,11 +369,14 @@ foreach(_sf IN LISTS XE_GLSLANG_SPIRV_SRCS)
 endforeach()
 
 # ---------------------------------------------------------------------------
-# JNI bridge (this repo)
+# JNI bridge & Stubs (this repo)
 # ---------------------------------------------------------------------------
 set(XE_JNI_SRCS
   ${CMAKE_CURRENT_SOURCE_DIR}/jni/windowed_app_jni.cc
   ${CMAKE_CURRENT_SOURCE_DIR}/jni/xenia_jni_utils.cc
+  ${CMAKE_CURRENT_SOURCE_DIR}/discord_stubs.c
+  ${CMAKE_CURRENT_SOURCE_DIR}/ffmpeg_stubs.c
+  ${CMAKE_CURRENT_SOURCE_DIR}/debug_window_stubs.cc
 )
 
 # ---------------------------------------------------------------------------

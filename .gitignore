@@ -31,6 +31,5 @@ Thumbs.db
 
 # Xenia source (managed as a submodule — not committed directly)
 # src/ and third_party/ are symlinks created by setup.sh; ignore them
-# only if they end up as real directories (shouldn't happen normally)
-/src/
-/third_party/
+/src
+/third_party

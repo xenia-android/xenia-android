@@ -22,6 +22,7 @@
 
 // Xenia platform headers (vendored src/ tree).
 #include "xenia/ui/windowed_app_context_android.h"
+#include "xenia/base/cvar.h"
 
 #define XTAG  "XeniaJNI"
 #define XLOGI(...) __android_log_print(ANDROID_LOG_INFO,  XTAG, __VA_ARGS__)
@@ -77,7 +78,7 @@ Java_com_xenia_android_emulator_WindowedAppActivity_nativeInitialize(
   // cvars set per-launch (e.g. "target") override any persisted config.
   // The upstream cvar system merges these on top of any already-set values.
   if (cvarBundle) {
-    xe::cvar::ParseLaunchArgumentsFromAndroidBundle(cvarBundle);
+    cvar::ParseLaunchArgumentsFromAndroidBundle(cvarBundle);
   }
 
   XLOGI("nativeInitialize: context=%p", static_cast<void*>(ctx));
