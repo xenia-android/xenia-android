@@ -242,4 +242,18 @@ public abstract class WindowedAppActivity extends Activity {
             onWindowSurfaceDraw(true);
         }
     }
+
+    /**
+     * Called from native code when a fatal error occurs.
+     * Shows a Toast and finishes the activity gracefully.
+     */
+    @SuppressWarnings("UnusedDeclaration")
+    public void handleFatalError(final String message) {
+        runOnUiThread(() -> {
+            android.widget.Toast.makeText(WindowedAppActivity.this,
+                    "Fatal Error: " + message,
+                    android.widget.Toast.LENGTH_LONG).show();
+            finish();
+        });
+    }
 }

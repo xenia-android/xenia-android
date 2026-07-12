@@ -19,6 +19,12 @@ fi
 echo "Initializing submodules inside xenia-upstream..."
 git -C "${UPSTREAM}" submodule update --init --recursive --depth 1
 
+if [[ -f "${REPO}/xenia-upstream.patch" ]]; then
+  echo "Applying xenia-upstream.patch..."
+  git -C "${UPSTREAM}" checkout . || true
+  git -C "${UPSTREAM}" apply "${REPO}/xenia-upstream.patch"
+fi
+
 for target in src third_party; do
   link="${REPO}/${target}"
   src="xenia-upstream/${target}"
