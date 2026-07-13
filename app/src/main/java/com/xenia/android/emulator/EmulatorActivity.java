@@ -30,6 +30,10 @@ import com.xenia.android.R;
  */
 public class EmulatorActivity extends WindowedAppActivity {
 
+    // JNI input state bridge
+    private native void nativeSetGamepadState(int buttons, int leftTrigger, int rightTrigger,
+                                              int lx, int ly, int rx, int ry);
+
     @Override
     protected String getWindowedAppIdentifier() {
         // Must match XE_DEFINE_WINDOWED_APP(xenia, ...) in xenia_main.cc.
@@ -41,6 +45,14 @@ public class EmulatorActivity extends WindowedAppActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_emulator);
         setWindowSurfaceView(findViewById(R.id.emulator_surface_view));
+
+        final TouchControllerOverlay overlay = findViewById(R.id.touch_controller_overlay);
+        if (overlay != null) {
+            overlay.setOnControllerInputListener((buttons, leftTrigger, rightTrigger, lx, ly, rx, ry) -> {
+                nativeSetGamepadState(buttons, leftTrigger, rightTrigger, lx, ly, rx, ry);
+            });
+        }
+
         enterFullscreen();
     }
 

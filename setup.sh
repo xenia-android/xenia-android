@@ -23,6 +23,12 @@ if [[ -d "${REPO}/patches" ]]; then
   echo "Applying custom xenia-upstream patches..."
   cp "${REPO}/patches/base/"* "${UPSTREAM}/src/xenia/base/"
   cp "${REPO}/patches/ui/"* "${UPSTREAM}/src/xenia/ui/"
+  mkdir -p "${UPSTREAM}/src/xenia/kernel/"
+  cp "${REPO}/patches/kernel/"* "${UPSTREAM}/src/xenia/kernel/"
+  mkdir -p "${UPSTREAM}/src/xenia/app/"
+  cp "${REPO}/patches/app/"* "${UPSTREAM}/src/xenia/app/"
+  mkdir -p "${UPSTREAM}/src/xenia/hid/"
+  cp "${REPO}/patches/hid/"* "${UPSTREAM}/src/xenia/hid/"
 fi
 
 for target in src third_party; do

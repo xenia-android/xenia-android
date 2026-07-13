@@ -16,4 +16,13 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
 
+    <!--
+        The modern Xbox 360-style touch controller overlay.
+        Drawn on top of the emulator surface view.
+    -->
+    <com.xenia.android.emulator.TouchControllerOverlay
+        android:id="@+id/touch_controller_overlay"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+
 </FrameLayout>

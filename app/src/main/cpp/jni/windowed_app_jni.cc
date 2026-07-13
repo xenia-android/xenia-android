@@ -23,6 +23,7 @@
 // Xenia platform headers (vendored src/ tree).
 #include "xenia/ui/windowed_app_context_android.h"
 #include "xenia/base/cvar.h"
+#include "xenia/hid/android_input_driver.h"
 
 #define XTAG  "XeniaJNI"
 #define XLOGI(...) __android_log_print(ANDROID_LOG_INFO,  XTAG, __VA_ARGS__)
@@ -141,4 +142,23 @@ Java_com_xenia_android_emulator_WindowedAppActivity_nativePaint(
   if (ctx_) ctx_->JniActivityPaintWindow(forcePaint == JNI_TRUE);
 }
 
+// ---------------------------------------------------------------------------
+// nativeSetGamepadState — called from Java TouchControllerOverlay
+// ---------------------------------------------------------------------------
+JNIEXPORT void JNICALL
+Java_com_xenia_android_emulator_EmulatorActivity_nativeSetGamepadState(
+    JNIEnv* /*env*/, jobject /*activity*/, jint buttons, jint lt, jint rt,
+    jint lx, jint ly, jint rx, jint ry) {
+  xe::hid::AndroidInputDriver::SetButtonState(
+      static_cast<uint16_t>(buttons),
+      static_cast<uint8_t>(lt),
+      static_cast<uint8_t>(rt),
+      static_cast<int16_t>(lx),
+      static_cast<int16_t>(ly),
+      static_cast<int16_t>(rx),
+      static_cast<int16_t>(ry)
+  );
+}
+
 }  // extern "C"
+

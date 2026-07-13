@@ -377,6 +377,7 @@ set(XE_JNI_SRCS
   ${CMAKE_CURRENT_SOURCE_DIR}/discord_stubs.c
   ${CMAKE_CURRENT_SOURCE_DIR}/ffmpeg_stubs.c
   ${CMAKE_CURRENT_SOURCE_DIR}/debug_window_stubs.cc
+  ${XENIA_ROOT}/src/xenia/hid/android_input_driver.cc
 )
 
 # ---------------------------------------------------------------------------
@@ -456,3 +457,4 @@ if(CMAKE_BUILD_TYPE STREQUAL "Release")
     COMMAND ${CMAKE_STRIP} --strip-unneeded "$<TARGET_FILE:xenia-android>"
     COMMENT "Stripping xenia-android.so")
 endif()
+
