@@ -162,6 +162,7 @@ public class MainActivity extends AppCompatActivity
 
         final Intent intent = new Intent(this, EmulatorActivity.class);
         intent.putExtra(WindowedAppActivity.EXTRA_CVARS, cvars);
+        intent.putExtra("game_uri", gameUri.toString());
         startActivity(intent);
     }
 

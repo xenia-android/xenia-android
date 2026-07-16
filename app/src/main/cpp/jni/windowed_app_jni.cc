@@ -23,6 +23,8 @@
 // Xenia platform headers (vendored src/ tree).
 #include "xenia/ui/windowed_app_context_android.h"
 #include "xenia/base/cvar.h"
+#include "xenia/base/main_android.h"
+#include "xenia/emulator.h"
 #include "xenia/hid/android_input_driver.h"
 
 #define XTAG  "XeniaJNI"
@@ -158,6 +160,54 @@ Java_com_xenia_android_emulator_EmulatorActivity_nativeSetGamepadState(
       static_cast<int16_t>(rx),
       static_cast<int16_t>(ry)
   );
+}
+
+// ---------------------------------------------------------------------------
+// nativeSaveState — called from EmulatorActivity to save state to file
+// ---------------------------------------------------------------------------
+JNIEXPORT jboolean JNICALL
+Java_com_xenia_android_emulator_EmulatorActivity_nativeSaveState(
+    JNIEnv* env, jobject activity, jstring filePath) {
+  XLOGI("nativeSaveState: entry");
+  xe::Emulator* emulator = xe::GetActiveEmulator();
+  if (!emulator) {
+    XLOGE("nativeSaveState: No active emulator instance!");
+    return JNI_FALSE;
+  }
+  const char* file_path_c = env->GetStringUTFChars(filePath, nullptr);
+  if (!file_path_c) {
+    XLOGE("nativeSaveState: Failed to get path string!");
+    return JNI_FALSE;
+  }
+  std::filesystem::path path(file_path_c);
+  env->ReleaseStringUTFChars(filePath, file_path_c);
+
+  bool success = emulator->SaveToFile(path);
+  return success ? JNI_TRUE : JNI_FALSE;
+}
+
+// ---------------------------------------------------------------------------
+// nativeRestoreState — called from EmulatorActivity to load state from file
+// ---------------------------------------------------------------------------
+JNIEXPORT jboolean JNICALL
+Java_com_xenia_android_emulator_EmulatorActivity_nativeRestoreState(
+    JNIEnv* env, jobject activity, jstring filePath) {
+  XLOGI("nativeRestoreState: entry");
+  xe::Emulator* emulator = xe::GetActiveEmulator();
+  if (!emulator) {
+    XLOGE("nativeRestoreState: No active emulator instance!");
+    return JNI_FALSE;
+  }
+  const char* file_path_c = env->GetStringUTFChars(filePath, nullptr);
+  if (!file_path_c) {
+    XLOGE("nativeRestoreState: Failed to get path string!");
+    return JNI_FALSE;
+  }
+  std::filesystem::path path(file_path_c);
+  env->ReleaseStringUTFChars(filePath, file_path_c);
+
+  bool success = emulator->RestoreFromFile(path);
+  return success ? JNI_TRUE : JNI_FALSE;
 }
 
 }  // extern "C"

@@ -27,6 +27,9 @@
 #include "xenia/config.h"
 #include "xenia/debug/ui/debug_window.h"
 #include "xenia/emulator.h"
+#if XE_PLATFORM_ANDROID
+#include "xenia/base/main_android.h"
+#endif  // XE_PLATFORM_ANDROID
 #include "xenia/ui/file_picker.h"
 #include "xenia/ui/window.h"
 #include "xenia/ui/window_listener.h"
@@ -506,10 +509,18 @@ bool EmulatorApp::OnInitialize() {
   assert_not_null(emulator_thread_event_);
   emulator_thread_ = std::thread(&EmulatorApp::EmulatorThread, this);
 
+#if XE_PLATFORM_ANDROID
+  xe::SetActiveEmulator(emulator_.get());
+#endif  // XE_PLATFORM_ANDROID
+
   return true;
 }
 
 void EmulatorApp::OnDestroy() {
+#if XE_PLATFORM_ANDROID
+  xe::SetActiveEmulator(nullptr);
+#endif  // XE_PLATFORM_ANDROID
+
   ShutdownEmulatorThreadFromUIThread();
 
   if (cvars::discord) {
