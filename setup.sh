@@ -29,6 +29,7 @@ if [[ -d "${REPO}/patches" ]]; then
   cp "${REPO}/patches/app/"* "${UPSTREAM}/src/xenia/app/"
   mkdir -p "${UPSTREAM}/src/xenia/hid/"
   cp "${REPO}/patches/hid/"* "${UPSTREAM}/src/xenia/hid/"
+  cp "${REPO}/patches/emulator.cc" "${UPSTREAM}/src/xenia/emulator.cc"
 fi
 
 for target in src third_party; do

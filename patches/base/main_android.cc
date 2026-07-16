@@ -196,4 +196,14 @@ jmethodID GetAndroidActivityHandleFatalErrorMethodID() {
   return android_activity_handle_fatal_error_;
 }
 
+static Emulator* active_emulator_ = nullptr;
+
+void SetActiveEmulator(Emulator* emulator) {
+  active_emulator_ = emulator;
+}
+
+Emulator* GetActiveEmulator() {
+  return active_emulator_;
+}
+
 }  // namespace xe

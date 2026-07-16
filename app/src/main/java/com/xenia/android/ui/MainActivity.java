@@ -161,7 +161,10 @@ public class MainActivity extends AppCompatActivity
         cvars.putString("target", path);
 
         final Intent intent = new Intent(this, EmulatorActivity.class);
+        intent.setData(gameUri);
+        intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
         intent.putExtra(WindowedAppActivity.EXTRA_CVARS, cvars);
+        intent.putExtra("game_uri", gameUri.toString());
         startActivity(intent);
     }
 
@@ -170,6 +173,8 @@ public class MainActivity extends AppCompatActivity
         cvars.putString("target_trace_file", traceUri.toString());
 
         final Intent intent = new Intent(this, GpuTraceViewerActivity.class);
+        intent.setData(traceUri);
+        intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
         intent.putExtra(WindowedAppActivity.EXTRA_CVARS, cvars);
         startActivity(intent);
     }

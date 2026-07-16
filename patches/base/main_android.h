@@ -63,6 +63,10 @@ void SetAndroidActivity(JNIEnv* env, jobject activity);
 jobject GetAndroidActivity();
 jmethodID GetAndroidActivityHandleFatalErrorMethodID();
 
+class Emulator;
+void SetActiveEmulator(Emulator* emulator);
+Emulator* GetActiveEmulator();
+
 }  // namespace xe
 
 #endif  // XENIA_BASE_MAIN_ANDROID_H_

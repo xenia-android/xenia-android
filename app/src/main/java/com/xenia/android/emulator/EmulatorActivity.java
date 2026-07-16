@@ -7,32 +7,23 @@ import android.view.KeyEvent;
 import android.view.View;
 import android.view.WindowInsets;
 import android.view.WindowInsetsController;
+import android.widget.Toast;
 
 import com.xenia.android.R;
+import com.xenia.android.utils.PathUtils;
 
 /**
  * Full-screen emulator activity that runs an Xbox 360 game.
- *
- * <p>The game path must be supplied as a cvar via the EXTRA_CVARS Bundle
- * with the key {@code "target"} — matching Xenia's
- * {@code DEFINE_transient_path(target, ...)} cvar from xenia_main.cc.</p>
- *
- * <p>Example launch:</p>
- * <pre>
- *   Bundle cvars = new Bundle();
- *   cvars.putString("target", "/sdcard/game.iso");  // or content:// path
- *   cvars.putString("gpu", "vulkan");               // optional overrides
- *   cvars.putString("apu", "nop");
- *   Intent i = new Intent(this, EmulatorActivity.class);
- *   i.putExtra(WindowedAppActivity.EXTRA_CVARS, cvars);
- *   startActivity(i);
- * </pre>
  */
 public class EmulatorActivity extends WindowedAppActivity {
 
     // JNI input state bridge
     private native void nativeSetGamepadState(int buttons, int leftTrigger, int rightTrigger,
                                               int lx, int ly, int rx, int ry);
+
+    // JNI Savestate bridges
+    private native boolean nativeSaveState(String filePath);
+    private native boolean nativeRestoreState(String filePath);
 
     @Override
     protected String getWindowedAppIdentifier() {
@@ -42,6 +33,19 @@ public class EmulatorActivity extends WindowedAppActivity {
 
     @Override
     protected void onCreate(final Bundle savedInstanceState) {
+        String uriStr = getIntent().getStringExtra("game_uri");
+        if (uriStr != null) {
+            Uri gameUri = Uri.parse(uriStr);
+            String nativePath = PathUtils.uriToNativePath(this, gameUri);
+            if (nativePath != null) {
+                Bundle cvars = getIntent().getBundleExtra(WindowedAppActivity.EXTRA_CVARS);
+                if (cvars == null) {
+                    cvars = new Bundle();
+                }
+                cvars.putString("target", nativePath);
+                getIntent().putExtra(WindowedAppActivity.EXTRA_CVARS, cvars);
+            }
+        }
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_emulator);
         setWindowSurfaceView(findViewById(R.id.emulator_surface_view));
@@ -67,7 +71,7 @@ public class EmulatorActivity extends WindowedAppActivity {
     @Override
     public boolean onKeyDown(final int keyCode, final KeyEvent event) {
         if (keyCode == KeyEvent.KEYCODE_BACK) {
-            confirmExit();
+            showEmulatorMenu();
             return true;
         }
         return super.onKeyDown(keyCode, event);
@@ -93,6 +97,137 @@ public class EmulatorActivity extends WindowedAppActivity {
                             | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
                             | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
                             | View.SYSTEM_UI_FLAG_LAYOUT_STABLE);
+        }
+    }
+
+    private void showEmulatorMenu() {
+        final String[] options = {
+            "Save State (Slot 1)",
+            "Load State (Slot 1)",
+            "Save State (Slot 2)",
+            "Load State (Slot 2)",
+            "Save State (Slot 3)",
+            "Load State (Slot 3)",
+            "Exit Game"
+        };
+
+        new android.app.AlertDialog.Builder(this)
+                .setTitle("Emulator Menu")
+                .setItems(options, (dialog, which) -> {
+                    switch (which) {
+                        case 0:
+                            handleSaveState(1);
+                            break;
+                        case 1:
+                            handleLoadState(1);
+                            break;
+                        case 2:
+                            handleSaveState(2);
+                            break;
+                        case 3:
+                            handleLoadState(2);
+                            break;
+                        case 4:
+                            handleSaveState(3);
+                            break;
+                        case 5:
+                            handleLoadState(3);
+                            break;
+                        case 6:
+                            confirmExit();
+                            break;
+                    }
+                })
+                .show();
+    }
+
+    private String getSaveStatePath(int slot) {
+        String baseName = "default_game";
+        String uriStr = getIntent().getStringExtra("game_uri");
+        Uri gameUri = null;
+        if (uriStr != null) {
+            gameUri = Uri.parse(uriStr);
+        } else {
+            gameUri = getIntent().getData();
+        }
+
+        if (gameUri != null) {
+            String filename = null;
+            if ("content".equals(gameUri.getScheme())) {
+                try (android.database.Cursor cursor = getContentResolver().query(gameUri, null, null, null, null)) {
+                    if (cursor != null && cursor.moveToFirst()) {
+                        int index = cursor.getColumnIndex(android.provider.OpenableColumns.DISPLAY_NAME);
+                        if (index != -1) {
+                            filename = cursor.getString(index);
+                        }
+                    }
+                } catch (Exception ignored) {}
+            }
+            if (filename == null) {
+                filename = gameUri.getPath();
+                if (filename != null) {
+                    int cut = filename.lastIndexOf('/');
+                    if (cut != -1) {
+                        filename = filename.substring(cut + 1);
+                    }
+                }
+            }
+            if (filename != null) {
+                int dotIndex = filename.lastIndexOf('.');
+                if (dotIndex > 0) {
+                    baseName = filename.substring(0, dotIndex);
+                } else {
+                    baseName = filename;
+                }
+            }
+        } else {
+            Bundle cvarBundle = getIntent().getBundleExtra(WindowedAppActivity.EXTRA_CVARS);
+            if (cvarBundle != null) {
+                String target = cvarBundle.getString("target");
+                if (target != null) {
+                    int cut = target.lastIndexOf('/');
+                    if (cut != -1) {
+                        baseName = target.substring(cut + 1);
+                        int dotIndex = baseName.lastIndexOf('.');
+                        if (dotIndex > 0) {
+                            baseName = baseName.substring(0, dotIndex);
+                        }
+                    }
+                }
+            }
+        }
+
+        baseName = baseName.replaceAll("[^a-zA-Z0-9_\\- ]", "_");
+
+        java.io.File dir = getExternalFilesDir("savestates");
+        if (dir != null && !dir.exists()) {
+            dir.mkdirs();
+        }
+        return new java.io.File(dir, baseName + "_slot" + slot + ".sav").getAbsolutePath();
+    }
+
+    private void handleSaveState(int slot) {
+        String path = getSaveStatePath(slot);
+        boolean success = nativeSaveState(path);
+        if (success) {
+            Toast.makeText(this, "Save State Saved to Slot " + slot, Toast.LENGTH_SHORT).show();
+        } else {
+            Toast.makeText(this, "Failed to Save State to Slot " + slot, Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void handleLoadState(int slot) {
+        String path = getSaveStatePath(slot);
+        java.io.File file = new java.io.File(path);
+        if (!file.exists()) {
+            Toast.makeText(this, "No Save State found in Slot " + slot, Toast.LENGTH_SHORT).show();
+            return;
+        }
+        boolean success = nativeRestoreState(path);
+        if (success) {
+            Toast.makeText(this, "Save State Loaded from Slot " + slot, Toast.LENGTH_SHORT).show();
+        } else {
+            Toast.makeText(this, "Failed to Load Save State from Slot " + slot, Toast.LENGTH_SHORT).show();
         }
     }
 
