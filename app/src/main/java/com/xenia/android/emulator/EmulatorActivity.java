@@ -10,6 +10,7 @@ import android.view.WindowInsetsController;
 import android.widget.Toast;
 
 import com.xenia.android.R;
+import com.xenia.android.utils.PathUtils;
 
 /**
  * Full-screen emulator activity that runs an Xbox 360 game.
@@ -32,6 +33,19 @@ public class EmulatorActivity extends WindowedAppActivity {
 
     @Override
     protected void onCreate(final Bundle savedInstanceState) {
+        String uriStr = getIntent().getStringExtra("game_uri");
+        if (uriStr != null) {
+            Uri gameUri = Uri.parse(uriStr);
+            String nativePath = PathUtils.uriToNativePath(this, gameUri);
+            if (nativePath != null) {
+                Bundle cvars = getIntent().getBundleExtra(WindowedAppActivity.EXTRA_CVARS);
+                if (cvars == null) {
+                    cvars = new Bundle();
+                }
+                cvars.putString("target", nativePath);
+                getIntent().putExtra(WindowedAppActivity.EXTRA_CVARS, cvars);
+            }
+        }
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_emulator);
         setWindowSurfaceView(findViewById(R.id.emulator_surface_view));
