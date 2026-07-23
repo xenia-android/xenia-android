@@ -672,9 +672,7 @@ void EmulatorApp::EmulatorThread() {
     auto abs_path = std::filesystem::absolute(path);
     result = emulator_->LaunchPath(abs_path);
     if (XFAILED(result)) {
-      xe::FatalError(fmt::format("Failed to launch target: {:08X}", result));
-      app_context().RequestDeferredQuit();
-      return;
+      XELOGE("Failed to launch target: {:08X}", result);
     }
   }
 
