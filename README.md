@@ -1,3 +1,8 @@
+## NOTICE
+Xenia Android has reached end-of-life (EOL) and the project development has been shifted to https://github.com/libaerto/xeo
+
+
+
 # xenia-android
 
 Android port of [Xenia Canary](https://github.com/xenia-canary/xenia-canary), an Xbox 360 emulator.
